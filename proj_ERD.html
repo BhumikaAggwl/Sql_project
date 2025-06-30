@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Retail Co. - Inventory Management ERD</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .erd-container {
+            position: relative;
+            width: 100%;
+            height: 900px;
+            border: 3px solid #34495e;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #f8f9fa 25%, #e9ecef 25%, #e9ecef 50%, #f8f9fa 50%, #f8f9fa 75%, #e9ecef 75%);
+            background-size: 40px 40px;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .table-box {
+            position: absolute;
+            background: white;
+            border: 3px solid #2c3e50;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            min-width: 200px;
+            cursor: move;
+            user-select: none;
+        }
+        
+        .table-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            border-color: #3498db;
+        }
+        
+        .table-box.dragging {
+            transform: rotate(2deg) scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            border-color: #e74c3c;
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 12px;
+            margin: -15px -15px 15px -15px;
+            border-radius: 9px 9px 0 0;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        
+        .field {
+            padding: 6px 0;
+            border-bottom: 1px solid #ecf0f1;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .field:last-child {
+            border-bottom: none;
+        }
+        
+        .field-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .field-type {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+        
+        .primary-key {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        
+        .foreign-key {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        
+        .staging-table {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .dimension-table {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+        
+        .fact-table {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        
+        .connection-line {
+            position: absolute;
+            background: #34495e;
+            z-index: 1;
+            border-radius: 2px;
+            transform-origin: left center;
+            pointer-events: none;
+        }
+        
+        .connection-dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #e74c3c;
+            border-radius: 50%;
+            border: 2px solid #34495e;
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 2px solid #34495e;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            max-width: 90%;
+        }
+        
+        .legend h3 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 15px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+        
+        .legend-tip {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: #2c3e50;
+            width: 100%;
+            text-align: center;
+        }
+        
+        /* Table positions */
+        .staging { top: 20px; left: 20px; }
+        .dim-store { top: 150px; left: 900px; }
+        .dim-product { top: 20px; left: 900px; }
+        .dim-weather { top: 300px; left: 900px; }
+        .dim-date { top: 450px; left: 900px; }
+        .fact { top: 200px; left: 450px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏪 Urban Retail Co.</h1>
+            <p>Inventory Management System - Entity Relationship Diagram</p>
+        </div>
+        
+        <div class="erd-container">
+            <!-- Staging Table -->
+            <div class="table-box staging">
+                <div class="table-header staging-table">inventory_forecasting_staging</div>
+                <div class="field">
+                    <span class="field-name">raw_date</span>
+                    <span class="field-type">VARCHAR(20)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">store_id</span>
+                    <span class="field-type">VARCHAR(10)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">product_id</span>
+                    <span class="field-type">VARCHAR(10)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">category</span>
+                    <span class="field-type">VARCHAR(50)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">region</span>
+                    <span class="field-type">VARCHAR(20)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">inventory_level</span>
+                    <span class="field-type">INT</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">units_sold</span>
+                    <span class="field-type">INT</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">units_ordered</span>
+                    <span class="field-type">INT</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">demand_forecast</span>
+                    <span class="field-type">DECIMAL(8,2)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">price</span>
+                    <span class="field-type">DECIMAL(8,2)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">discount</span>
+                    <span class="field-type">DECIMAL(8,2)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">weather_condition</span>
+                    <span class="field-type">VARCHAR(20)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">holiday_promotion</span>
+                    <span class="field-type">BOOLEAN</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">competitor_pricing</span>
+                    <span class="field-type">DECIMAL(8,2)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">seasonality</span>
+                    <span class="field-type">VARCHAR(20)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">date</span>
+                    <span class="field-type">DATE</span>
+                </div>
+            </div>
+            
+            <!-- Dimension Tables -->
+            <div class="table-box dim-store">
+                <div class="table-header dimension-table">dim_store</div>
+                <div class="field">
+                    <span class="field-name primary-key">store_id</span>
+                    <span class="field-type">VARCHAR(10) PK</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">region</span>
+                    <span class="field-type">VARCHAR(20)</span>
+                </div>
+            </div>
+            
+            <div class="table-box dim-product">
+                <div class="table-header dimension-table">dim_product</div>
+                <div class="field">
+                    <span class="field-name primary-key">product_id</span>
+                    <span class="field-type">VARCHAR(10) PK</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">category</span>
+                    <span class="field-type">VARCHAR(50)</span>
+                </div>
+            </div>
+            
+            <div class="table-box dim-weather">
+                <div class="table-header dimension-table">dim_weather</div>
+                <div class="field">
+                    <span class="field-name primary-key">weather_id</span>
+                    <span class="field-type">INT PK</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">weather_condition</span>
+                    <span class="field-type">VARCHAR(20)</span>
+                </div>
+            </div>
+            
+            <div class="table-box dim-date">
+                <div class="table-header dimension-table">dim_date</div>
+                <div class="field">
+                    <span class="field-name primary-key">date_key</span>
+                    <span class="field-type">DATE PK</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">seasonality</span>
+                    <span class="field-type">VARCHAR(20)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">holiday_promotion</span>
+                    <span class="field-type">BOOLEAN</span>
+                </div>
+            </div>
+            
+            <!-- Fact Table -->
+            <div class="table-box fact">
+                <div class="table-header fact-table">fact_inventory</div>
+                <div class="field">
+                    <span class="field-name primary-key">fact_id</span>
+                    <span class="field-type">INT PK</span>
+                </div>
+                <div class="field">
+                    <span class="field-name foreign-key">date_key</span>
+                    <span class="field-type">DATE FK</span>
+                </div>
+                <div class="field">
+                    <span class="field-name foreign-key">store_id</span>
+                    <span class="field-type">VARCHAR(10) FK</span>
+                </div>
+                <div class="field">
+                    <span class="field-name foreign-key">product_id</span>
+                    <span class="field-type">VARCHAR(10) FK</span>
+                </div>
+                <div class="field">
+                    <span class="field-name foreign-key">weather_id</span>
+                    <span class="field-type">INT FK</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">inventory_level</span>
+                    <span class="field-type">INT</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">units_sold</span>
+                    <span class="field-type">INT</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">units_ordered</span>
+                    <span class="field-type">INT</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">demand_forecast</span>
+                    <span class="field-type">DECIMAL(10,2)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">price</span>
+                    <span class="field-type">DECIMAL(10,2)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">discount</span>
+                    <span class="field-type">DECIMAL(5,2)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">holiday_or_promo</span>
+                    <span class="field-type">BOOLEAN</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">competitor_price</span>
+                    <span class="field-type">DECIMAL(10,2)</span>
+                </div>
+                <div class="field">
+                    <span class="field-name">seasonality</span>
+                    <span class="field-type">VARCHAR(20)</span>
+                </div>
+            </div>
+            
+            <!-- Connection Lines will be dynamically generated -->
+            
+            <!-- Legend - Now at the bottom -->
+            <div class="legend">
+                <h3>📊 Table Types</h3>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #e74c3c, #c0392b);"></div>
+                    <span>Staging Table</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);"></div>
+                    <span>Dimension Table</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #3498db, #2980b9);"></div>
+                    <span>Fact Table</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #f39c12, #e67e22);"></div>
+                    <span>Primary Key (PK)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #27ae60, #2ecc71);"></div>
+                    <span>Foreign Key (FK)</span>
+                </div>
+                <div class="legend-tip">
+                    💡 <strong>Tip:</strong> Drag tables to rearrange them!
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px; border-left: 5px solid #3498db;">
+            <h3 style="color: #2c3e50; margin-top: 0;">🔗 Relationship Connections:</h3>
+            <ul style="color: #34495e; line-height: 1.8;">
+                <li><strong>fact_inventory.date_key</strong> → <strong>dim_date.date_key</strong></li>
+                <li><strong>fact_inventory.store_id</strong> → <strong>dim_store.store_id</strong></li>
+                <li><strong>fact_inventory.product_id</strong> → <strong>dim_product.product_id</strong></li>
+                <li><strong>fact_inventory.weather_id</strong> → <strong>dim_weather.weather_id</strong></li>
+            </ul>
+            <p style="color: #7f8c8d; font-style: italic; margin-bottom: 0;">
+                The staging table feeds data into the dimension and fact tables through ETL processes defined in your SQL scripts.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Make tables draggable and create connections
+        let isDragging = false;
+        let currentTable = null;
+        let initialX = 0;
+        let initialY = 0;
+        let xOffset = 0;
+        let yOffset = 0;
+        
+        // Define the connections between tables
+        const connections = [
+            { from: 'fact', to: 'dim-date', fromField: 'date_key', toField: 'date_key' },
+            { from: 'fact', to: 'dim-store', fromField: 'store_id', toField: 'store_id' },
+            { from: 'fact', to: 'dim-product', fromField: 'product_id', toField: 'product_id' },
+            { from: 'fact', to: 'dim-weather', fromField: 'weather_id', toField: 'weather_id' }
+        ];
+        
+        // Store connection elements
+        const connectionElements = {
+            lines: [],
+            dots: []
+        };
+        
+        // Initialize the ERD
+        function initERD() {
+            createConnections();
+            
+            document.querySelectorAll('.table-box').forEach(table => {
+                table.addEventListener('mousedown', dragStart);
+                table.addEventListener('mouseup', dragEnd);
+                table.addEventListener('mouseleave', dragEnd);
+            });
+            
+            document.addEventListener('mousemove', drag);
+            
+            // Auto-arrange on load
+            setTimeout(autoArrange, 500);
+        }
+        
+        // Create connection lines between tables
+        function createConnections() {
+            const container = document.querySelector('.erd-container');
+            
+            // Clear existing connections
+            connectionElements.lines.forEach(line => line.remove());
+            connectionElements.dots.forEach(dot => dot.remove());
+            connectionElements.lines = [];
+            connectionElements.dots = [];
+            
+            // Create new connections
+            connections.forEach(conn => {
+                const fromTable = document.querySelector(`.${conn.from}`);
+                const toTable = document.querySelector(`.${conn.to}`);
+                
+                if (fromTable && toTable) {
+                    // Create connection line
+                    const line = document.createElement('div');
+                    line.className = 'connection-line';
+                    container.appendChild(line);
+                    connectionElements.lines.push(line);
+                    
+                    // Create connection dots (start and end)
+                    const dotStart = document.createElement('div');
+                    dotStart.className = 'connection-dot';
+                    container.appendChild(dotStart);
+                    connectionElements.dots.push(dotStart);
+                    
+                    const dotEnd = document.createElement('div');
+                    dotEnd.className = 'connection-dot';
+                    container.appendChild(dotEnd);
+                    connectionElements.dots.push(dotEnd);
+                    
+                    // Update connection positions
+                    updateConnection(conn, fromTable, toTable, line, dotStart, dotEnd);
+                }
+            });
+        }
+        
+        // Update connection positions based on table positions
+        function updateConnection(conn, fromTable, toTable, line, dotStart, dotEnd) {
+            const fromRect = fromTable.getBoundingClientRect();
+            const toRect = toTable.getBoundingClientRect();
+            const containerRect = document.querySelector('.erd-container').getBoundingClientRect();
+            
+            // Calculate center points of the tables
+            const fromCenter = {
+                x: fromRect.left + fromRect.width / 2 - containerRect.left,
+                y: fromRect.top + fromRect.height / 2 - containerRect.top
+            };
+            
+            const toCenter = {
+                x: toRect.left + toRect.width / 2 - containerRect.left,
+                y: toRect.top + toRect.height / 2 - containerRect.top
+            };
+            
+            // Calculate angle between tables
+            const angle = Math.atan2(toCenter.y - fromCenter.y, toCenter.x - fromCenter.x);
+            
+            // Calculate start and end points (on edges of tables)
+            const radius = 10; // Distance from center to edge
+            const startPoint = {
+                x: fromCenter.x + Math.cos(angle) * (fromRect.width / 2),
+                y: fromCenter.y + Math.sin(angle) * (fromRect.height / 2)
+            };
+            
+            const endPoint = {
+                x: toCenter.x - Math.cos(angle) * (toRect.width / 2),
+                y: toCenter.y - Math.sin(angle) * (toRect.height / 2)
+            };
+            
+            // Calculate line length and position
+            const length = Math.sqrt(
+                Math.pow(endPoint.x - startPoint.x, 2) + 
+                Math.pow(endPoint.y - startPoint.y, 2)
+            );
+            
+            // Update line element
+            line.style.width = `${length}px`;
+            line.style.height = '2px';
+            line.style.left = `${startPoint.x}px`;
+            line.style.top = `${startPoint.y}px`;
+            line.style.transform = `rotate(${angle}rad)`;
+            
+            // Update dot positions
+            dotStart.style.left = `${startPoint.x - 4}px`;
+            dotStart.style.top = `${startPoint.y - 4}px`;
+            
+            dotEnd.style.left = `${endPoint.x - 4}px`;
+            dotEnd.style.top = `${endPoint.y - 4}px`;
+        }
+        
+        // Update all connections when tables are moved
+        function updateAllConnections() {
+            connections.forEach((conn, index) => {
+                const fromTable = document.querySelector(`.${conn.from}`);
+                const toTable = document.querySelector(`.${conn.to}`);
+                
+                if (fromTable && toTable) {
+                    const line = connectionElements.lines[index];
+                    const dotStart = connectionElements.dots[index * 2];
+                    const dotEnd = connectionElements.dots[index * 2 + 1];
+                    
+                    updateConnection(conn, fromTable, toTable, line, dotStart, dotEnd);
+                }
+            });
+        }
+        
+        function dragStart(e) {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+
+            if (e.target.closest('.table-box')) {
+                isDragging = true;
+                currentTable = e.target.closest('.table-box');
+                currentTable.classList.add('dragging');
+                
+                const rect = currentTable.getBoundingClientRect();
+                const containerRect = currentTable.parentElement.getBoundingClientRect();
+                
+                xOffset = e.clientX - rect.left;
+                yOffset = e.clientY - rect.top;
+            }
+        }
+
+        function dragEnd(e) {
+            if (currentTable) {
+                currentTable.classList.remove('dragging');
+            }
+            
+            initialX = 0;
+            initialY = 0;
+            isDragging = false;
+            currentTable = null;
+            
+            // Update connections after dragging
+            updateAllConnections();
+        }
+
+        function drag(e) {
+            if (isDragging && currentTable) {
+                e.preventDefault();
+                
+                const containerRect = currentTable.parentElement.getBoundingClientRect();
+                
+                let newX = e.clientX - containerRect.left - xOffset;
+                let newY = e.clientY - containerRect.top - yOffset;
+                
+                // Boundary checking
+                const tableRect = currentTable.getBoundingClientRect();
+                const maxX = containerRect.width - tableRect.width;
+                const maxY = containerRect.height - tableRect.height;
+                
+                newX = Math.max(0, Math.min(newX, maxX));
+                newY = Math.max(0, Math.min(newY, maxY));
+                
+                currentTable.style.left = newX + 'px';
+                currentTable.style.top = newY + 'px';
+                
+                // Update connections while dragging
+                updateAllConnections();
+            }
+        }
+
+        // Auto-arrange button functionality
+        function autoArrange() {
+            const tables = document.querySelectorAll('.table-box');
+            const container = document.querySelector('.erd-container');
+            const containerWidth = container.offsetWidth;
+            const containerHeight = container.offsetHeight;
+            
+            // Better positions for each table
+            const positions = {
+                'staging': { x: 50, y: 50 },
+                'fact': { x: containerWidth / 2 - 150, y: containerHeight / 2 - 200 },
+                'dim-store': { x: containerWidth - 350, y: 100 },
+                'dim-product': { x: containerWidth - 350, y: 280 },
+                'dim-weather': { x: containerWidth - 350, y: 460 },
+                'dim-date': { x: containerWidth - 350, y: 640 }
+            };
+            
+            tables.forEach(table => {
+                const className = Array.from(table.classList).find(cls => 
+                    ['staging', 'fact', 'dim-store', 'dim-product', 'dim-weather', 'dim-date'].includes(cls)
+                );
+                
+                if (positions[className]) {
+                    table.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+                    table.style.left = positions[className].x + 'px';
+                    table.style.top = positions[className].y + 'px';
+                    
+                    setTimeout(() => {
+                        table.style.transition = 'all 0.3s ease';
+                    }, 800);
+                }
+            });
+            
+            // Update connections after auto-arrange
+            setTimeout(updateAllConnections, 850);
+        }
+
+        // Add auto-arrange button
+        window.addEventListener('load', () => {
+            const button = document.createElement('button');
+            button.innerHTML = '🎯 Auto-Arrange Tables';
+            button.style.cssText = `
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                padding: 12px 20px;
+                background: linear-gradient(135deg, #3498db, #2980b9);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+                transition: all 0.3s ease;
+                z-index: 1000;
+            `;
+            
+            button.addEventListener('mouseenter', () => {
+                button.style.transform = 'translateY(-2px)';
+                button.style.boxShadow = '0 6px 20px rgba(52, 152, 219, 0.4)';
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                button.style.transform = 'translateY(0)';
+                button.style.boxShadow = '0 4px 15px rgba(52, 152, 219, 0.3)';
+            });
+            
+            button.addEventListener('click', autoArrange);
+            document.querySelector('.erd-container').appendChild(button);
+            
+            // Initialize the ERD
+            initERD();
+        });
+    </script>
+</body>
+</html>
