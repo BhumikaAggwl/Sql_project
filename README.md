@@ -2,8 +2,8 @@
 # 🛒 Urban Retail Co. – Inventory Management SQL Solution
 
 **Author:** 
-[Avni Katarey]
-[BhumikaAggwl](https://github.com/BhumikaAggwl)
+#[Avni Katarey]
+#[BhumikaAggwl](https://github.com/BhumikaAggwl)
 
 **Last Updated:** June 2025
 
